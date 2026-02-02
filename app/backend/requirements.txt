@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+python-multipart
+pillow
+torch
+torchvision
+mlflow==2.20.0

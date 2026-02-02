@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+
+# IA / ML
+*.h5
+*.pt
+*.pth
+*.onnx
+*.pkl
+*.joblib
+
+# Datos
+data/
+datasets/
+*.csv
+*.zip
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# ==============================
+# DATASETS (NO subir a GitHub)
+# ==============================
+data/
+!data/.gitkeep
+
+# ==============================
+# MODELOS ENTRENADOS (NO subir)
+# ==============================
+models/
+!models/.gitkeep
+
+# ==============================
+# MLFLOW (experimentos locales)
+# ==============================
+mlruns/
+mlartifacts/
+
+# ==============================
+# JUPYTER
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# PYTHON
+# ==============================
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv
+venv/
+
+# ==============================
+# SISTEMA
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
+# LOGS
+# ==============================
+logs/
+*.log
