@@ -41,7 +41,7 @@ export interface PredictMultiResponse {
 
 @Injectable({ providedIn: "root" })
 export class ApiService {
-  private readonly base = "http://127.0.0.1:8000";
+  private readonly base = "http://localhost:8000";
 
   constructor(private http: HttpClient) {}
 
@@ -77,9 +77,9 @@ export class ApiService {
     return this.http.post(`${this.base}/retrain`, {});
   }
 
-  reloadModel(): Observable<any> {
-    return this.http.post(`${this.base}/reload-model`, {});
-  }
+  reloadModel() {
+  return this.http.post(`${this.base}/reload-model`, {});
+}
 
   logs(lines: number = 200) {
   const ts = Date.now();

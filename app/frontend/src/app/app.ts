@@ -20,7 +20,6 @@ import { ApiService } from './api.service';
   templateUrl: './app.html',
 })
 export class App implements OnInit, OnDestroy {
-  // ---- Estado: info del modelo activo ----
   activeInfo: any = null;
 
   // ---- Estado: predicción múltiple ----
@@ -83,15 +82,14 @@ ngOnInit(): void {
   this.sub.add(logSub);
 
   // refrescar estado de salud cada 10s
-  const healthSub = interval(10000)
-    .subscribe(() => this.refreshHealth());
+  const healthSub = interval(10000).subscribe(() => this.refreshHealth());
   this.sub.add(healthSub);
 
-  // refrescar progreso de reentrenamiento cada 2.5s
+  // ✅ refrescar progreso de reentrenamiento cada 2.5s (USANDO PARSER)
   const progressSub = interval(2500)
     .pipe(switchMap(() => this.api.retrainProgress(120)))
     .subscribe({
-      next: (t) => (this.retrainLogText = t),
+      next: (t) => this.parseProgressFromLog(t),
       error: () => {}
     });
   this.sub.add(progressSub);
@@ -99,11 +97,10 @@ ngOnInit(): void {
 
 refreshRetrainProgress(): void {
   this.api.retrainProgress(120).subscribe({
-    next: (t) => (this.retrainLogText = t),
+    next: (t) => this.parseProgressFromLog(t),
     error: () => {}
   });
 }
-
 
   ngOnDestroy(): void {
     // liberar URLs creadas con createObjectURL
@@ -505,12 +502,68 @@ saveAnnotatedAsNewData(): void {
   // Recargar modelo (si hay nuevo Production)
   // ---------------------------
   onReloadModel(): void {
-    this.api.reloadModel().subscribe({
-      next: () => {
-        this.refreshHealth();
-        this.refreshLogs();
-      },
-      error: () => {},
-    });
+  this.api.reloadModel().subscribe({
+    next: () => {
+      this.refreshHealth();
+      this.refreshLogs();
+    },
+    error: (e) => {
+      console.error(e);
+    }
+  });
+}
+
+  retrainTextLog = '';
+
+retrainParsed = {
+  status: 'IDLE' as 'IDLE' | 'RUNNING' | 'DONE' | 'ERROR',
+  epoch: 0,
+  epochsTotal: 0,
+  trainLoss: null as number | null,
+  valLoss: null as number | null,
+  epochTimeSec: null as number | null,
+  etaSec: null as number | null,
+};
+private parseProgressFromLog(text: string) {
+  this.retrainTextLog = text;
+
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  let lastEpoch: any = null;
+  let lastDone: any = null;
+
+  for (const ln of lines) {
+    if (!ln.startsWith('{')) continue;
+    try {
+      const obj = JSON.parse(ln);
+
+      if (obj.type === 'start') {
+        this.retrainParsed.status = 'RUNNING';
+        this.retrainParsed.epochsTotal = obj.epochs_total ?? 0;
+      }
+
+      if (obj.type === 'epoch') lastEpoch = obj;
+      if (obj.type === 'done') lastDone = obj;
+
+    } catch {}
   }
+
+  if (lastEpoch) {
+    this.retrainParsed.status = 'RUNNING';
+    this.retrainParsed.epoch = lastEpoch.epoch ?? 0;
+    this.retrainParsed.epochsTotal = lastEpoch.epochs_total ?? this.retrainParsed.epochsTotal;
+    this.retrainParsed.trainLoss = lastEpoch.train_loss ?? null;
+    this.retrainParsed.epochTimeSec = lastEpoch.epoch_time_sec ?? null;
+
+    if (this.retrainParsed.epochsTotal > 0 && this.retrainParsed.epochTimeSec) {
+      const remaining = this.retrainParsed.epochsTotal - this.retrainParsed.epoch;
+      this.retrainParsed.etaSec = remaining * this.retrainParsed.epochTimeSec;
+    }
+  }
+
+  if (lastDone) {
+    this.retrainParsed.status = lastDone.status === 'OK' ? 'DONE' : 'ERROR';
+  }
+}
+
 }
