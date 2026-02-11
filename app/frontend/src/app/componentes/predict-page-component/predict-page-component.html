@@ -1,0 +1,95 @@
+<div class="rounded-2xl border border-primary-500/20 bg-slate-950/30 p-6 space-y-6">
+
+  <div class="text-xl font-bold text-slate-100">Predicción de Imágenes</div>
+
+  <!-- Upload -->
+  <label
+    class="block cursor-pointer rounded-2xl border-2 border-dashed border-primary-500/30
+           hover:border-primary-400/60 transition p-8 text-center"
+  >
+    <input
+      type="file"
+      accept="image/*"
+      multiple
+      class="hidden"
+      (change)="state.onPickPredictFiles($event)"
+    />
+
+    <div class="text-slate-300 font-semibold">
+      Arrastra imágenes o haz clic para seleccionar
+    </div>
+    <div class="text-xs text-slate-500 mt-1">
+      Seleccionadas: {{ state.predictFiles?.length || 0 }}
+    </div>
+  </label>
+
+  <!-- Threshold -->
+  <div class="rounded-xl border border-slate-800 p-4">
+    <div class="flex justify-between text-sm text-slate-400 mb-2">
+      <span>Threshold</span>
+      <span class="text-primary-300 font-semibold">
+        {{ (state.scoreThreshold * 100) | number:'1.0-0' }}%
+      </span>
+    </div>
+
+    <input
+      type="range"
+      min="0"
+      max="100"
+      [value]="state.scoreThreshold * 100"
+      (input)="state.scoreThreshold = ($any($event.target).value / 100)"
+      class="w-full accent-indigo-500"
+    />
+  </div>
+
+  <!-- Button -->
+  <button
+    (click)="state.onPredict()"
+    [disabled]="state.predictBusy || !state.predictFiles.length"
+    class="w-full py-3 rounded-xl font-semibold text-white
+           bg-gradient-to-r from-primary-500 to-secondary-600
+           hover:brightness-110 disabled:opacity-50 transition"
+  >
+    {{ state.predictBusy ? 'Procesando...' : 'Predecir' }}
+  </button>
+
+  <!-- Results -->
+  <div
+    *ngFor="let p of state.predictPreviews; let i = index"
+    class="rounded-xl border border-slate-800 bg-slate-950/40 p-4 space-y-3"
+  >
+    <div class="flex justify-between text-sm text-slate-300">
+      <span>{{ p.name }}</span>
+      <span *ngIf="state.predictResults[i]?.ok">
+        {{ state.predictResults[i]?.inference_ms }} ms
+      </span>
+    </div>
+
+    <canvas
+      class="w-full rounded-lg bg-black"
+      [attr.id]="'cv_' + i"
+    ></canvas>
+
+    <div *ngIf="state.predictResults[i]?.found; else noFound" class="space-y-2">
+      <div
+        *ngFor="let d of state.predictResults[i]?.detections"
+        class="flex justify-between text-sm"
+      >
+        <span>{{ d.label }}</span>
+        <span class="text-primary-300">{{ (d.score * 100) | number:'1.0-1' }}%</span>
+      </div>
+    </div>
+
+    <ng-template #noFound>
+      <div class="text-red-400 text-sm">No se detectaron objetos</div>
+    </ng-template>
+
+    <details>
+      <summary class="cursor-pointer text-xs text-slate-400">Ver JSON</summary>
+      <pre class="text-xs bg-black p-3 rounded mt-2 overflow-auto">
+{{ state.predictResults[i] | json }}
+      </pre>
+    </details>
+  </div>
+
+</div>

@@ -1,0 +1,119 @@
+<div class="rounded-2xl border border-emerald-500/20 bg-slate-950/30 p-6 space-y-6">
+
+  <!-- Título -->
+  <div class="text-xl font-bold text-slate-100">
+    Anotación de Imágenes
+  </div>
+
+  <!-- Selección de imagen -->
+  <div class="space-y-2">
+    <input
+      type="file"
+      accept="image/*"
+      (change)="state.onPickAnnotFile($event)"
+      class="block text-sm text-slate-300
+             file:mr-4 file:py-2 file:px-4
+             file:rounded-xl file:border-0
+             file:bg-emerald-600 file:text-white
+             hover:file:bg-emerald-500 transition"
+    />
+
+    <div *ngIf="state.annotFile" class="text-xs text-emerald-300">
+      Imagen cargada: {{ state.annotFile.name }}
+    </div>
+  </div>
+
+  <!-- Controles -->
+  <div class="flex flex-wrap gap-3 items-center text-sm text-slate-300">
+
+    <div class="flex items-center gap-2">
+      <span>Clase:</span>
+      <select
+        [(ngModel)]="state.selectedClass"
+        class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2"
+      >
+        <option value="person">person</option>
+        <option value="car">car</option>
+        <option value="airplane">airplane</option>
+      </select>
+    </div>
+
+    <button
+      (click)="state.removeLastBox()"
+      [disabled]="!state.boxes.length"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+             bg-slate-800 border border-slate-700
+             hover:bg-slate-700 disabled:opacity-40 transition"
+    >
+      ⟲ Deshacer
+    </button>
+
+    <button
+      (click)="state.clearBoxes()"
+      [disabled]="!state.boxes.length"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+             bg-slate-800 border border-slate-700
+             hover:bg-slate-700 disabled:opacity-40 transition"
+    >
+      ✕ Limpiar
+    </button>
+  </div>
+
+  <!-- Canvas + Preview -->
+  <div class="rounded-xl border border-slate-700 bg-white overflow-auto">
+    <canvas
+      id="annot_canvas"
+      class="block max-w-full"
+      (mousedown)="state.onAnnotMouseDown($event)"
+      (mousemove)="state.onAnnotMouseMove($event)"
+      (mouseup)="state.onAnnotMouseUp($event)"
+    ></canvas>
+  </div>
+
+  <!-- Acciones -->
+  <div class="flex flex-wrap items-center gap-4">
+
+    <button
+      (click)="state.saveAnnotatedAsNewData()"
+      [disabled]="state.newDataBusy || !state.annotFile"
+      class="inline-flex items-center gap-2 px-6 py-3 rounded-xl
+             bg-emerald-600 text-white font-semibold
+             hover:bg-emerald-500 active:translate-y-[1px]
+             disabled:opacity-40 transition"
+    >
+      {{ state.newDataBusy ? 'Guardando…' : 'Guardar para reentrenamiento' }}
+    </button>
+
+    <div class="text-sm text-slate-400">
+      Cajas dibujadas:
+      <span class="font-semibold text-slate-200">
+        {{ state.boxes.length }}
+      </span>
+    </div>
+
+  </div>
+
+  <!-- YOLO generado -->
+  <details class="rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+    <summary class="cursor-pointer text-sm text-slate-300 font-semibold">
+      Ver YOLO generado
+    </summary>
+    <pre class="text-xs bg-black p-3 rounded mt-3 overflow-auto">
+{{ state.boxesToYoloText() }}
+    </pre>
+  </details>
+
+  <!-- Resultado del guardado -->
+  <div *ngIf="state.newDataResult"
+       class="rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+
+    <div class="text-sm font-semibold text-slate-200 mb-2">
+      Resultado
+    </div>
+
+    <pre class="text-xs bg-black p-3 rounded overflow-auto">
+{{ state.newDataResult | json }}
+    </pre>
+  </div>
+
+</div>

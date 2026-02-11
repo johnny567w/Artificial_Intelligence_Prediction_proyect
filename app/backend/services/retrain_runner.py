@@ -10,11 +10,7 @@ from typing import Dict
 import subprocess
 
 NB_CANDIDATES = [
-    # tu nombre esperado
     "05_continual_retrain_new_data.ipynb",
-    # por si lo guardaste con otro nombre
-    "05_incremental_retrain.ipynb",
-    "notebook_05.ipynb",
 ]
 
 def _find_nb(project_root: Path) -> Path | None:

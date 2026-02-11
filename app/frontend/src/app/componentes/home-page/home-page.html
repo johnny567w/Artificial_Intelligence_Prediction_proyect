@@ -1,0 +1,72 @@
+<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+  <!-- Predicción -->
+  <div class="rounded-2xl border border-slate-800 bg-slate-950/30 p-6 hover:border-primary-500/40 transition">
+    <div class="text-xl font-bold text-slate-100">Predicción</div>
+    <div class="text-sm text-slate-400 mt-2">
+      Carga imágenes y detecta objetos automáticamente usando el modelo activo.
+    </div>
+
+    <ul class="text-xs text-slate-500 mt-3 space-y-1">
+      <li>• Detección multi-objeto</li>
+      <li>• Visualización con cajas</li>
+      <li>• Threshold configurable</li>
+    </ul>
+
+    <a
+      routerLink="/predict"
+      class="inline-flex mt-5 px-4 py-2 rounded-xl
+             bg-primary-500/20 border border-primary-500/30
+             text-primary-200 hover:bg-primary-500/30 transition text-sm"
+    >
+      Ir a Predicción →
+    </a>
+  </div>
+
+  <!-- Anotación -->
+  <div class="rounded-2xl border border-slate-800 bg-slate-950/30 p-6 hover:border-emerald-500/40 transition">
+    <div class="text-xl font-bold text-slate-100">Anotación</div>
+    <div class="text-sm text-slate-400 mt-2">
+      Dibuja cajas manualmente para generar nuevos datos de entrenamiento.
+    </div>
+
+    <ul class="text-xs text-slate-500 mt-3 space-y-1">
+      <li>• Anotación con mouse</li>
+      <li>• Múltiples clases</li>
+      <li>• Formato YOLO</li>
+    </ul>
+
+    <a
+      routerLink="/annotate"
+      class="inline-flex mt-5 px-4 py-2 rounded-xl
+             bg-emerald-500/15 border border-emerald-500/25
+             text-emerald-200 hover:bg-emerald-500/25 transition text-sm"
+    >
+      Ir a Anotación →
+    </a>
+  </div>
+
+  <!-- Reentrenamiento -->
+  <div class="rounded-2xl border border-slate-800 bg-slate-950/30 p-6 hover:border-secondary-500/40 transition">
+    <div class="text-xl font-bold text-slate-100">Reentrenamiento</div>
+    <div class="text-sm text-slate-400 mt-2">
+      Ejecuta el pipeline automático de reentrenamiento con nuevos datos.
+    </div>
+
+    <ul class="text-xs text-slate-500 mt-3 space-y-1">
+      <li>• Progreso por epochs</li>
+      <li>• Métricas en tiempo real</li>
+      <li>• Registro en MLflow</li>
+    </ul>
+
+    <a
+      routerLink="/retrain"
+      class="inline-flex mt-5 px-4 py-2 rounded-xl
+             bg-secondary-500/20 border border-secondary-500/30
+             text-secondary-200 hover:bg-secondary-500/30 transition text-sm"
+    >
+      Ir a Reentrenamiento →
+    </a>
+  </div>
+
+</div>

@@ -1,0 +1,355 @@
+<div class="min-h-screen bg-slate-50">
+  <div class="max-w-6xl mx-auto p-6 space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <div class="text-2xl font-bold text-slate-900">IA-FINAL Detector</div>
+        <div class="text-slate-600">person, car, airplane</div>
+      </div>
+
+      <div class="flex gap-2">
+        <button
+          (click)="toggleLogs()"
+          class="rounded-xl px-4 py-2 bg-slate-900 text-white hover:bg-slate-800"
+        >
+          {{ showLogs ? 'Ocultar logs' : 'Ver logs' }}
+        </button>
+
+        <button
+          (click)="onReloadModel()"
+          class="rounded-xl px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100"
+        >
+          Recargar modelo
+        </button>
+      </div>
+    </div>
+
+    <!-- Modelo activo -->
+    <div class="rounded-2xl bg-white shadow p-4 border border-slate-200">
+      <div class="text-lg font-semibold text-slate-800 mb-3">Modelo activo</div>
+     <div class="rounded-2xl bg-white shadow p-4 border border-slate-200">
+  <div class="text-lg font-semibold text-slate-800 mb-3">Modelo activo</div>
+
+<div *ngIf="activeInfo; else loadingModel" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+  <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+    <div class="text-xs uppercase text-slate-500">tracking db</div>
+    <div class="text-sm font-semibold text-slate-800 break-all">
+      {{ activeInfo.tracking_db || 'N/A' }}
+    </div>
+  </div>
+
+  <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+    <div class="text-xs uppercase text-slate-500">registered model</div>
+    <div class="text-sm font-semibold text-slate-800 break-all">
+      {{ activeInfo.registered_model || 'N/A' }}
+    </div>
+  </div>
+
+  <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+    <div class="text-xs uppercase text-slate-500">production version</div>
+    <div class="text-sm font-semibold text-slate-800">
+      {{ activeInfo.production_version !== undefined && activeInfo.production_version !== null ? activeInfo.production_version : 'N/A' }}
+    </div>
+  </div>
+</div>
+
+
+  <ng-template #loadingModel>
+    <div class="text-sm text-slate-600">Cargando...</div>
+  </ng-template>
+
+  <details class="mt-3">
+    <summary class="cursor-pointer text-slate-600">Ver JSON</summary>
+    <pre class="text-xs bg-slate-950 text-slate-100 p-3 rounded-xl overflow-auto mt-2">
+{{ activeInfo | json }}
+    </pre>
+  </details>
+</div>
+
+    </div>
+
+    <!-- Predicción -->
+    <div class="rounded-2xl bg-white shadow p-4 border border-slate-200">
+      <div class="text-lg font-semibold text-slate-800 mb-3">Predicción</div>
+
+      <div class="space-y-4">
+
+        <!-- Input múltiple -->
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          (change)="onPickPredictFiles($event)"
+          class="block w-full text-sm"
+        />
+
+        <!-- Threshold -->
+        <div class="flex items-center gap-3">
+          <div class="text-sm text-slate-700 w-40">Score threshold</div>
+          <input
+            type="number"
+            step="0.05"
+            min="0"
+            max="1"
+            [(ngModel)]="scoreThreshold"
+            class="w-28 rounded-lg border border-slate-300 px-2 py-1"
+          />
+        </div>
+
+        <!-- Botón -->
+        <button
+          (click)="onPredict()"
+          [disabled]="predictBusy || !predictFiles.length"
+          class="rounded-xl px-4 py-2 bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+        >
+          {{ predictBusy ? 'Prediciendo...' : 'Predecir' }}
+        </button>
+
+        <!-- Resultados por imagen -->
+        <div class="space-y-4">
+          <div
+            *ngFor="let p of predictPreviews; let i = index"
+            class="rounded-xl border border-slate-200 p-3 bg-white"
+          >
+            <div class="text-sm font-semibold text-slate-800 mb-2">
+              {{ p.name }}
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
+              <!-- Canvas -->
+              <div class="relative">
+                <canvas
+                  class="w-full border border-slate-200 rounded-lg bg-slate-50"
+                  [attr.id]="'cv_' + i"
+                ></canvas>
+              </div>
+
+              <!-- Info -->
+              <div class="text-sm">
+                <div class="text-slate-700 mb-2">Resultado:</div>
+
+                <ng-container *ngIf="predictResults[i]?.ok; else noResult">
+                  <div class="text-slate-600 mb-2">
+                    inference_ms:
+                    {{ predictResults[i]?.inference_ms?.toFixed?.(1) ?? predictResults[i]?.inference_ms }}
+                  </div>
+
+                  <div *ngIf="!predictResults[i]?.found" class="text-red-600 font-semibold">
+                    no se ha encontrado
+                  </div>
+
+                  <div *ngIf="predictResults[i]?.found" class="space-y-2">
+                    <div
+                      *ngFor="let d of predictResults[i]?.detections"
+                      class="flex items-center justify-between rounded-lg bg-slate-100 px-3 py-2"
+                    >
+                      <div class="font-semibold text-slate-800">
+                        {{ d.label }}
+                      </div>
+                      <div class="text-slate-700">
+                        {{ (d.score * 100).toFixed(1) }}%
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <ng-template #noResult>
+                  <div class="text-red-600">Error o sin resultado</div>
+                </ng-template>
+
+                <!-- JSON colapsable -->
+                <details class="mt-3">
+                  <summary class="cursor-pointer text-slate-600">Ver JSON</summary>
+                  <pre class="text-xs bg-slate-950 text-slate-100 p-3 rounded-xl overflow-auto mt-2">
+{{ predictResults[i] | json }}
+                  </pre>
+                </details>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Nuevos datos -->
+    <div class="rounded-2xl bg-white shadow p-4 border border-slate-200">
+  <div class="text-lg font-semibold text-slate-800 mb-3">
+    Agregar nuevas imágenes (anotación con mouse)
+  </div>
+
+  <div class="space-y-3">
+    <input
+      type="file"
+      accept="image/*"
+      (change)="onPickAnnotFile($event)"
+      class="block w-full text-sm"
+    />
+
+    <div class="flex flex-wrap gap-2 items-center">
+      <div class="text-sm text-slate-700">Clase:</div>
+
+      <select
+        [(ngModel)]="selectedClass"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+      >
+        <option value="person">person (0)</option>
+        <option value="car">car (1)</option>
+        <option value="airplane">airplane (2)</option>
+      </select>
+
+      <button
+        (click)="removeLastBox()"
+        class="rounded-xl px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-sm"
+        [disabled]="!boxes.length"
+      >
+        Deshacer última caja
+      </button>
+
+      <button
+        (click)="clearBoxes()"
+        class="rounded-xl px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-sm"
+        [disabled]="!boxes.length"
+      >
+        Limpiar cajas
+      </button>
+    </div>
+
+    <div class="text-sm text-slate-600">
+      Instrucciones: selecciona clase y dibuja cajas con el mouse. Puedes dibujar varias cajas.
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-slate-50 p-2 overflow-auto">
+      <canvas
+        id="annot_canvas"
+        class="max-w-full border border-slate-200 rounded-lg bg-white"
+        (mousedown)="onAnnotMouseDown($event)"
+        (mousemove)="onAnnotMouseMove($event)"
+        (mouseup)="onAnnotMouseUp($event)"
+      ></canvas>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button
+        (click)="saveAnnotatedAsNewData()"
+        [disabled]="newDataBusy || !annotFile"
+        class="rounded-xl px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
+      >
+        {{ newDataBusy ? 'Guardando...' : 'Guardar para reentrenamiento' }}
+      </button>
+
+      <div class="text-sm text-slate-600">
+        Cajas: {{ boxes.length }}
+      </div>
+    </div>
+
+    <details>
+      <summary class="cursor-pointer text-slate-600 text-sm">Ver YOLO generado</summary>
+      <pre class="text-xs bg-slate-950 text-slate-100 p-3 rounded-xl overflow-auto mt-2">
+{{ boxesToYoloText() }}
+      </pre>
+    </details>
+
+    <pre class="text-sm bg-slate-100 p-3 rounded-xl overflow-auto min-h-28">
+{{ newDataResult ? (newDataResult | json) : 'Estado aquí' }}
+    </pre>
+  </div>
+</div>
+
+
+<!-- Reentrenamiento -->
+<div class="rounded-2xl bg-white shadow p-4 border border-slate-200">
+
+  <!-- Progreso de entrenamiento -->
+  <div class="rounded-xl border border-slate-200 bg-white p-4 mb-4">
+
+    <div class="flex justify-between items-center text-sm mb-2">
+      <div class="font-semibold text-slate-800">Training progress</div>
+      <div class="text-slate-600">
+        <ng-container *ngIf="retrainParsed?.status === 'RUNNING'; else statusLabel">
+          Epoch {{ retrainParsed.epoch }} / {{ retrainParsed.epochsTotal }}
+        </ng-container>
+        <ng-template #statusLabel>
+          {{ retrainParsed?.status || 'IDLE' }}
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Barra -->
+    <div class="h-3 bg-slate-200 rounded-full overflow-hidden">
+      <div
+        class="h-3 bg-purple-600 transition-all duration-300"
+        [style.width.%]="
+          retrainParsed?.epochsTotal
+            ? (100 * retrainParsed.epoch / retrainParsed.epochsTotal)
+            : 0
+        ">
+      </div>
+    </div>
+
+    <!-- Métricas -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 text-sm">
+      <div>
+        <div class="text-slate-500">Train loss</div>
+        <div class="font-semibold">
+          {{ retrainParsed?.trainLoss ?? '—' }}
+        </div>
+      </div>
+
+      <div>
+        <div class="text-slate-500">Epoch time</div>
+        <div class="font-semibold">
+          {{ retrainParsed?.epochTimeSec ? retrainParsed.epochTimeSec + ' s' : '—' }}
+        </div>
+      </div>
+
+      <div>
+        <div class="text-slate-500">ETA</div>
+        <div class="font-semibold">
+          {{ retrainParsed?.etaSec ? retrainParsed.etaSec + ' s' : '—' }}
+        </div>
+      </div>
+
+      <div>
+        <div class="text-slate-500">Status</div>
+        <div class="font-semibold">
+          {{ retrainParsed?.status || 'IDLE' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acción -->
+  <div class="flex items-center gap-3">
+    <button
+      (click)="onRetrain()"
+      [disabled]="retrainBusy"
+      class="rounded-xl px-4 py-2 bg-purple-700 text-white hover:bg-purple-600 disabled:opacity-50"
+    >
+      {{ retrainBusy ? 'Reentrenando...' : 'Reentrenar automático' }}
+    </button>
+
+    <div class="text-sm text-slate-600">
+      Solo entrena si hay imágenes nuevas en <code>data/new_data</code>.
+    </div>
+  </div>
+
+  <!-- Resultado -->
+  <pre class="text-sm bg-slate-100 p-3 rounded-xl overflow-auto mt-3 min-h-24">
+{{ retrainResult ? (retrainResult | json) : 'Estado aquí' }}
+  </pre>
+
+</div>
+
+
+    <!-- Logs -->
+    <div *ngIf="showLogs" class="rounded-2xl bg-white shadow p-4 border border-slate-200">
+      <div class="text-lg font-semibold text-slate-800 mb-3">Logs</div>
+      <pre class="text-xs bg-slate-950 text-slate-100 p-3 rounded-xl overflow-auto max-h-96">
+{{ logs }}
+      </pre>
+    </div>
+
+  </div>
+</div>
